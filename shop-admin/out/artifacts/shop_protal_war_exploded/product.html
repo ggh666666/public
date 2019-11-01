@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <title>Bootstrap 101 Template</title>
+
+    <!-- Bootstrap core CSS -->
+    <link type="text/css" rel="stylesheet" href="/js/bootstrap-3.3.7-dist/css/bootstrap.css">
+
+    <!-- HTML5 shim 和 Respond.js 是为了让 IE8 支持 HTML5 元素和媒体查询（media queries）功能 -->
+    <!-- 警告：通过 file:// 协议（就是直接将 html 页面拖拽到浏览器中）访问页面时 Respond.js 不起作用 -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.jsdelivr.net/npm/html5shiv@3.7.3/dist/html5shiv.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/respond.js@1.4.2/dest/respond.min.js"></script>
+    <![endif]-->
+</head>
+<body>
+<div class="row" id="productListDiv">
+
+</div>
+<div class="row" id="brandListDiv">
+
+</div>
+
+<div id="productDiv" style="display:none">
+    <div class="col-sm-6 col-md-4">
+        <div class="thumbnail">
+            <img src="http://192.168.214.128/img/##mainImagePath##" style="height: 150px;" alt="...">
+            <div class="caption">
+                <h3>商品名:##productName##</h3>
+                <p>价格:##price##</p>
+                <p><a href="#" class="btn btn-primary" role="button">Button</a> <a href="#" class="btn btn-default"
+                                                                                   role="button">Button</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="brandDiv" style="display:none">
+    <div class="col-sm-6 col-md-4">
+        <div class="thumbnail">
+            <img src="http://192.168.214.128/img/##brandImg##" style="height: 150px;" alt="...">
+            <div class="caption">
+                <h3>品牌名:##brandName##</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- jQuery (Bootstrap 的所有 JavaScript 插件都依赖 jQuery，所以必须放在前边) -->
+<script src="/js/jquery-3.3.1.min.js"></script>
+<script src="/js/jquery.cookie.js"></script>
+<!-- 加载 Bootstrap 的所有 JavaScript 插件。你也可以根据需要只加载单个插件。 -->
+<script src="/js/bootstrap-3.3.7-dist/js/bootstrap.min.js"></script>
+<script>
+    $(function () {
+        $.ajax({
+            url: 'http://localhost:8086/product/selectList.jhtml',
+            type: 'post',
+            dataType: 'jsonp',//解决ajax不能跨域
+            success: function (res) {
+                var str = '';
+                for (var i = 0; i < res.length; i++) {
+                    str += $('#productDiv').html().replace(/##productName##/g, res[i].productName)
+                        .replace(/##price##/g, res[i].price)
+                        .replace(/##mainImagePath##/g, res[i].mainImagePath);
+                }
+                $('#productListDiv').html(str);
+            }
+        })
+        //热销品牌
+        $.ajax({
+            url: 'http://localhost:8086/brand/hotList.jhtml',
+            beforeSend: function (xhr) {
+                var my_token = $.cookie("my_token");
+                xhr.setRequestHeader("x-auth", my_token);
+            },
+            success: function (res) {
+                if (res.code == 200) {
+                    res = res.data;
+                    var str = '';
+                    for (var i = 0; i < res.length; i++) {
+                        str += $('#brandDiv').html().replace(/##brandName##/g, res[i].brandName)
+                            .replace(/##brandImg##/g, res[i].brandImg);
+                    }
+                    $('#brandListDiv').html(str);
+                }
+            }
+        })
+    })
+</script>
+</body>
+</html>

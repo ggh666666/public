@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fh.shop.admin.mapper.role.IRoleMapper">
+    <!-- 查询list  me -->
+    <select id="list" resultType="com.fh.shop.admin.po.role.Role">
+        select id,roleName
+        from t_role
+    </select>
+
+
+    <!--查询总条数-->
+    <select id="findRoleByCount" resultType="java.lang.Long">
+        select count(*) from t_role
+    </select>
+    <!--查询当前页数据-->
+    <select id="findRoleByList" parameterType="com.fh.shop.admin.po.role.Role"
+            resultType="com.fh.shop.admin.po.role.Role">
+        select t.* from (
+        select id,roleName from t_role
+        order by id desc
+        )t
+        limit #{start},#{length}
+    </select>
+
+    <!--添加角色-->
+    <insert id="addRole" parameterType="com.fh.shop.admin.po.role.Role">
+        <selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
+            select last_insert_id()
+        </selectKey>
+        insert into t_role(roleName)
+        values (#{roleName})
+    </insert>
+
+    <!--修改角色-->
+    <update id="updateRole" parameterType="com.fh.shop.admin.po.role.Role">
+        update t_role
+        set roleName = #{roleName}
+        where id = #{id}
+    </update>
+
+    <!--回显角色-->
+    <select id="toUpdateRole" parameterType="java.lang.Integer" resultType="com.fh.shop.admin.po.role.Role">
+        select id,roleName from t_role
+        where id = #{id}
+    </select>
+
+    <!--查询这个角色对应的角色资源中间表的id数组-->
+    <select id="toRoleOnWealth" parameterType="java.lang.Integer" resultType="java.lang.Integer">
+        select wealthId from t_role_wealth
+        where roleId=#{id}
+    </select>
+
+    <!--删除角色-->
+    <delete id="deleteRole" parameterType="java.lang.Integer">
+        delete from t_role
+        where id = #{id}
+    </delete>
+    <!-- 根据roleId删除用户角色 -->
+    <delete id="deleteUserRole" parameterType="java.lang.Integer">
+        delete from t_user_role where roleId = #{v}
+    </delete>
+    <!-- 根据roleId删除角色资源 -->
+    <delete id="deleteRoleWealth" parameterType="java.lang.Integer">
+        delete from t_role_wealth where roleId = #{v}
+    </delete>
+
+    <!--查询所有-->
+    <select id="findRoleCheckbox" resultType="com.fh.shop.admin.po.role.Role">
+        select id,roleName from t_role
+    </select>
+
+    <!--添加角色资源中间表数据-->
+    <insert id="addRoleOnWealth" parameterType="java.util.Map">
+        insert into t_role_wealth(roleId,wealthId)
+        values
+        <foreach collection="list" item="trw" separator=",">
+            (#{trw.roleId},#{trw.wealthId})
+        </foreach>
+    </insert>
+
+    <!--删除角色对应的资源角色中间表数据-->
+    <delete id="deleteRoleOnWealth" parameterType="java.lang.Integer">
+        delete from t_role_wealth where roleId=#{id}
+    </delete>
+
+    <!--查询角色对应的角色资源中间表的资源名称-->
+    <select id="toRoleOnWealthByName" parameterType="java.lang.Integer" resultType="java.lang.String">
+        select tw.memuName from t_role_wealth trw
+        left join t_wealth tw
+        on trw.wealthId = tw.id
+        where trw.roleId=#{id}
+    </select>
+</mapper>

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fh.shop.admin.mapper.wealth.IWealthMapper">
+    <!--查询所有的菜单节点-->
+    <select id="findZtreeList" resultType="com.fh.shop.admin.po.wealth.Wealth">
+        select id,memuName,fatherId,menuType,url from t_wealth
+    </select>
+    <!--添加节点-->
+    <insert id="add" parameterType="com.fh.shop.admin.po.wealth.Wealth">
+        <selectKey resultType="java.lang.Integer" keyProperty="id" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+        insert into t_wealth(memuName,fatherId,menuType,url)
+        values (#{memuName},#{fatherId},#{menuType},#{url})
+    </insert>
+
+    <!--删除节点-->
+    <delete id="deleteZtree" parameterType="java.lang.Integer">
+        delete from t_wealth
+        where
+        id in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+    <!-- 根据资源ids删除role wealth 中间表数据 -->
+    <delete id="deleteRoleWealth" parameterType="java.lang.Integer">
+        delete from t_role_wealth
+        where
+        id in
+        <foreach collection="array" item="ids" open="(" separator="," close=")">
+            #{ids}
+        </foreach>
+    </delete>
+
+    <!--修改-->
+    <update id="updateZtree" parameterType="com.fh.shop.admin.po.wealth.Wealth">
+        update t_wealth
+        set memuName=#{memuName},fatherId=#{fatherId},menuType=#{menuType},url=#{url}
+        where id=#{id}
+    </update>
+</mapper>

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fh.shop.admin.mapper.brand.IBrandMapper">
+    <!-- 添加 -->
+    <insert id="add" parameterType="com.fh.shop.admin.po.brand.Brand">
+        insert into t_brand(brandName,brandImg,sort,sellState)
+        values(#{brandName},#{brandImg},#{sort},#{sellState})
+    </insert>
+
+    <!-- 查询总条数 -->
+    <select id="getRecordsTotal" resultType="java.lang.Long">
+        select count(*)
+        from t_brand
+    </select>
+
+    <!-- 查询list -->
+    <select id="list" resultType="com.fh.shop.admin.po.brand.Brand" parameterType="com.fh.shop.admin.common.Page">
+        select id,brandName,brandImg,sort,sellState
+        from t_brand
+        order by sellState desc, sort asc
+        limit #{start},#{length}
+    </select>
+
+    <!-- delete -->
+    <delete id="delete" parameterType="java.lang.Integer">
+        delete from t_brand where id = #{id}
+    </delete>
+
+    <!-- 回显 -->
+    <select id="findBrand" resultType="com.fh.shop.admin.po.brand.Brand" parameterType="java.lang.Integer">
+        select id,brandName,brandImg,sort,sellState
+        from t_brand
+        where id = #{id}
+    </select>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="com.fh.shop.admin.po.brand.Brand">
+        update t_brand
+        set brandName = #{brandName}, brandImg = #{brandImg}, sort = #{sort}, sellState = #{sellState}
+        where id = #{id}
+    </update>
+
+</mapper>

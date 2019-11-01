@@ -1,0 +1,224 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fh.shop.admin.mapper.user.IUserMapper">
+
+    <!-- 查询当前用户的菜单信息 -->
+    <select id="getMenu" resultType="com.fh.shop.admin.po.wealth.Wealth">
+        select w.id, w.memuName, w.fatherId, w.menuType, w.url
+        from t_user_role ur
+        left join t_role_wealth rw on rw.roleId = ur.roleId
+        left join t_wealth w on w.id = rw.wealthId
+        where ur.userId = #{v} and w.menuType = 1
+        group by w.id
+        order by w.id
+    </select>
+    <!-- 查询当前用户的菜单url -->
+    <select id="getMenuUrls" resultType="string">
+        select w.url
+        from t_user_role ur
+        left join t_role_wealth rw on rw.roleId = ur.roleId
+        left join t_wealth w on w.id = rw.wealthId
+        where ur.userId = #{v}
+        group by w.id
+    </select>
+
+    <!-- 根据用户名查询用户信息 -->
+    <select id="findUserByUserName" resultType="com.fh.shop.admin.po.user.User">
+        select
+        id,userName,password,realName,sex,age,pay,entryTime,phone,email,todayLogins,lastLoginTime,lockState,lastErrorTime,errors,salt
+        from t_user
+        where userName = #{v}
+    </select>
+    <!-- 根据邮箱查询用户信息 -->
+    <select id="findUserByEmail" resultType="com.fh.shop.admin.po.user.User">
+        select
+        id,userName,password,realName,sex,age,pay,entryTime,phone,email,todayLogins,lastLoginTime,lockState,lastErrorTime,errors,salt
+        from t_user
+        where email = #{v}
+    </select>
+
+    <!-- 添加 -->
+    <!--<insert id="add"  keyProperty="id" useGeneratedKeys="true" parameterType="com.fh.shop.admin.po.user.User">-->
+    <insert id="add" parameterType="com.fh.shop.admin.po.user.User">
+        <selectKey keyProperty="id" resultType="long" order="AFTER">
+            select last_insert_id()
+        </selectKey>
+        insert into
+        t_user(userName,realName,password,sex,age,pay,entryTime,phone,email,salt,area1,area2,area3,area4,areaInfo)
+        values(#{userName},#{realName},#{password},#{sex},#{age},#{pay},#{entryTime},#{phone},#{email},#{salt},#{area1},#{area2},#{area3},#{area4},#{areaInfo})
+    </insert>
+    <!-- 添加用户角色 -->
+    <insert id="addUserRole" parameterType="list">
+        insert into t_user_role(userId,roleId)
+        values
+        <foreach collection="list" item="userRole" separator=",">
+            (#{userRole.userId},#{userRole.roleId})
+        </foreach>
+    </insert>
+    <!-- 根据userId删除用户角色 -->
+    <delete id="deleteUserRole" parameterType="long">
+        delete from t_user_role where userId = #{v}
+    </delete>
+    <!-- 根据userId查询角色名 -->
+    <select id="findRoleNames" resultType="string" parameterType="long">
+        select r.roleName
+        from t_user_role ur
+        left join t_role r on r.id = ur.roleId
+        where ur.userId = #{v}
+    </select>
+    <!-- 根据userId查询角色ids -->
+    <select id="findRoleIds" resultType="Integer" parameterType="long">
+        select r.id
+        from t_user_role ur
+        left join t_role r on r.id = ur.roleId
+        where ur.userId = #{v}
+    </select>
+
+    <!-- 查询总条数 -->
+    <select id="getRecordsTotal" resultType="java.lang.Long"
+            parameterType="com.fh.shop.admin.param.user.UserSearchParam">
+        select count(*)
+        from t_user
+        <include refid="where"></include>
+    </select>
+
+    <!-- 查询list -->
+    <select id="list" resultType="com.fh.shop.admin.po.user.User"
+            parameterType="com.fh.shop.admin.param.user.UserSearchParam">
+        select id,userName,realName,sex,age,pay,entryTime,phone,email,lockState,errors,areaInfo
+        from t_user
+        <include refid="where"></include>
+        order by id desc
+        limit #{start},#{length}
+    </select>
+
+    <!-- 获取list -->
+    <select id="getList" resultType="com.fh.shop.admin.po.user.User"
+            parameterType="com.fh.shop.admin.param.user.UserSearchParam">
+        select id,userName,realName,sex,age,pay,entryTime,phone,email,areaInfo
+        from t_user
+        <include refid="where"></include>
+        order by id desc
+    </select>
+
+    <!-- delete -->
+    <delete id="delete" parameterType="java.lang.Long">
+        delete from t_user where id = #{id}
+    </delete>
+
+    <!-- 批量删除 -->
+    <delete id="batchDelete">
+        delete from t_user
+        where id in
+        <foreach collection="array" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+    <!-- 根据用户ids删除user role 中间表数据 -->
+    <delete id="batchDeleteUserRole">
+        delete from t_user_role
+        where userId in
+        <foreach collection="array" open="(" separator="," close=")" item="id">
+            #{id}
+        </foreach>
+    </delete>
+
+
+    <!-- 回显 -->
+    <select id="findUser" resultType="com.fh.shop.admin.po.user.User" parameterType="java.lang.Long">
+        select id,userName,realName,sex,age,pay,entryTime,phone,email,password,salt
+        ,area1,area2,area3,area4,areaInfo
+        from t_user
+        where id = #{id}
+    </select>
+
+    <!-- 修改 -->
+    <update id="update" parameterType="com.fh.shop.admin.po.user.User">
+        update t_user
+        set userName = #{userName}, realName = #{realName}, sex = #{sex}, age = #{age}, pay = #{pay}, entryTime =
+        #{entryTime}, phone = #{phone}, email = #{email},
+        area1=#{area1},area2=#{area2},area3=#{area3},area4=#{area4},areaInfo=#{areaInfo}
+        where id = #{id}
+    </update>
+
+    <!-- 修改密码 -->
+    <update id="updatePassword">
+        update t_user
+        set
+        <if test="param2 != null">
+            salt = #{param2},
+        </if>
+        password = #{param3}
+        where id = #{arg0}
+    </update>
+
+    <!-- 修改登录信息 --><!-- #{0.id} = #{param1.id} 如果多个参数中有对象则可以通过下标.属性获取值 -->
+    <update id="updateLoginInfo">
+        update t_user
+        set todayLogins = #{arg0}, lastLoginTime = NOW()
+        where id = #{param2}
+    </update>
+
+    <!-- 修改锁定信息 -->
+    <update id="updateLockInfo">
+        update t_user
+        set errors = #{arg0},lockState = #{arg1}
+        <if test="param1 != 0">
+            , lastErrorTime = NOW()
+        </if>
+        where id = #{arg2}
+    </update>
+
+    <sql id="where">
+        <where>
+            <if test="userName != null and userName != ''">
+                userName like concat('%',#{userName},'%')
+            </if>
+            <if test="realName != null and realName != ''">
+                and realName like concat('%',#{realName},'%')
+            </if>
+            <if test="beginAge != null and beginAge >= 0">
+                and age >= #{beginAge}
+            </if>
+            <if test="endAge != null and endAge >= 0 and (beginAge == null or endAge >= beginAge)">
+                and age &lt;= #{endAge}
+            </if>
+            <if test="minPay != null and minPay >= 0">
+                and pay >= #{minPay}
+            </if>
+            <if test="maxPay != null and maxPay >= 0 and (minPay == null or maxPay >= minPay)">
+                and pay &lt;= #{maxPay}
+            </if>
+            <if test="beginEntryTime != null">
+                and entryTime >= #{beginEntryTime}
+            </if>
+            <if test="endEntryTime != null and (beginEntryTime == null or endEntryTime >= beginEntryTime)">
+                and entryTime <![CDATA[<]]>= #{endEntryTime}
+            </if>
+            <if test="roleIdsLength > 0">
+                and id in(
+                select userId from t_user_role where roleId in
+                <foreach collection="roleIds" item="roleId" open="(" separator="," close=")" index="index">
+                    #{roleId}
+                </foreach>
+                group by userId having count(*) = #{roleIdsLength}
+                )
+            </if>
+            <if test="area1 != null and area1 > 0">
+                and area1 = #{area1}
+            </if>
+            <if test="area2 != null and area2 > 0">
+                and area2 = #{area2}
+            </if>
+            <if test="area3 != null and area3 > 0">
+                and area3 = #{area3}
+            </if>
+            <if test="area4 != null and area4 > 0">
+                and area4 = #{area4}
+            </if>
+        </where>
+    </sql>
+</mapper>

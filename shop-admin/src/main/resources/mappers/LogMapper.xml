@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC
+        "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fh.shop.admin.mapper.log.ILogMapper">
+    <sql id="selectParam">
+        <where>
+            <if test=" userName!=null and userName!=''">
+                userName like concat('%',#{userName},'%')
+            </if>
+            <if test=" realName!=null and realName!=''">
+                and realName like concat('%',#{realName},'%')
+            </if>
+            <if test=" status!=null and  status>-1">
+                and status = #{status}
+            </if>
+            <if test=" minTime !=null">
+                and createDate >= #{minTime}
+            </if>
+            <if test=" maxTime !=null">
+                and createDate &lt;= #{maxTime}
+            </if>
+            <if test=" content!=null and content!=''">
+                and content like concat('%',#{content},'%')
+            </if>
+        </where>
+    </sql>
+    <insert id="addLog" parameterType="com.fh.shop.admin.po.log.LogInfo">
+        insert into t_log(userName,realName,info,status,createDate,errorMsg,detail,content)
+        values (#{userName},#{realName},#{info},#{status},#{createDate},#{errorMsg},#{detail},#{content})
+    </insert>
+    <!--查询总条数-->
+    <select id="findLogByCount" parameterType="com.fh.shop.admin.param.log.LogSearchParam" resultType="java.lang.Long">
+        select count(*) from t_log
+        <include refid="selectParam"></include>
+    </select>
+    <!--查询当前页数据-->
+    <select id="findLogList" parameterType="com.fh.shop.admin.param.log.LogSearchParam"
+            resultType="com.fh.shop.admin.po.log.LogInfo">
+        select t.* from(
+        select id,userName,realName,info,status,createDate,errorMsg,detail,content from t_log
+        <include refid="selectParam"></include>
+        order by id desc
+        ) t
+        limit #{start},#{length}
+    </select>
+</mapper>

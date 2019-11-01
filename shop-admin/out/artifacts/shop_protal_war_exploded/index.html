@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <!-- head and css -->
+    <script src="/common/head.js"></script>
+    <link rel="icon" href="/js/shop/assets/img/favicon.ico">
+    <link rel="stylesheet" type="text/css" href="/js/shop/css/webbase.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/shop/css/pages-JD-index.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/shop/css/widget-jquery.autocomplete.css"/>
+    <link rel="stylesheet" type="text/css" href="/js/shop/css/widget-cartPanelView.css"/>
+    <title>商城首页</title>
+</head>
+<body>
+<!-- nav 导航条 -->
+<script src="/common/nav.js"></script>
+
+<div id="nav-bottom">
+    <!--顶部-->
+    <div class="nav-top">
+        <!--头部-->
+        <div class="header">
+            <div class="py-container">
+                <div class="yui3-g NavList">
+                    <div class="yui3-u Left all-sort">
+                        <h4>全部商品分类</h4>
+                    </div>
+                    <div class="yui3-u Center navArea">
+                        <ul class="nav">
+                            <li class="f-item">服装城</li>
+                            <li class="f-item">美妆馆</li>
+                            <li class="f-item">品优超市</li>
+                            <li class="f-item">全球购</li>
+                            <li class="f-item">闪购</li>
+                            <li class="f-item">团购</li>
+                            <li class="f-item">有趣</li>
+                        </ul>
+                    </div>
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--列表-->
+<div class="sort">
+    <div class="py-container">
+        <div class="yui3-g SortList ">
+            <div class="yui3-u Left all-sort-list">
+                <div class="all-sort-list2" id="cateListDiv">
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <!--商品列表-->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">商品列表</div>
+                <div class="panel-body" id="productListDiv">
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--热销品牌列表-->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="panel panel-success">
+                <div class="panel-heading">热销品牌</div>
+                <div class="panel-body" id="brandListDiv">
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+//商品 - template
+<div id="productDiv" style="display:none">
+    <div class="col-sm-6 col-md-4">
+        <div class="thumbnail">
+            <img src="http://192.168.214.128/img/##mainImagePath##" style="height: 150px;" alt="...">
+            <div class="caption">
+                <h3>商品名:##productName##</h3>
+                <p>价格:##price##</p>
+                <p>
+                    <a href="#" class="btn btn-primary" role="button" onclick="addProduct('##productId##', 1, 1)">购买</a>
+                    <a href="#" class="btn btn-default" role="button">收藏</a>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+//热销品牌 - template
+<div id="brandDiv" style="display:none">
+    <div class="col-sm-6 col-md-4">
+        <div class="thumbnail">
+            <img src=" https://aly-oss-ggh-test.oss-cn-beijing.aliyuncs.com/images/##brandImg##" style="height: 150px;"
+                 alt="...">
+            <div class="caption">
+                <h3>品牌名:##brandName##</h3>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(function () {
+        initProductList();
+        initBrandList();
+        initCategoryList();
+
+    })
+
+    function initCss() {
+        $('.all-sort-list2 > .item').hover(function () {
+            //父类分类列表容器的高度
+
+            $(this).addClass('hover');
+            $(this).children('.item-list').css('display', 'block');
+        }, function () {
+            $(this).removeClass('hover');
+            $(this).children('.item-list').css('display', 'none');
+        });
+
+        $('.item > .item-list > .close').click(function () {
+            $(this).parent().parent().removeClass('hover');
+            $(this).parent().hide();
+        });
+    }
+
+    var v_cateArr;
+    var v_html = "";
+
+    function initCategoryList() {
+        $.ajax({
+            type: "post",
+            url: "http://localhost:8086/category/list",
+            success: function (result) {
+                if (result.code == 200) {
+                    v_cateArr = result.data;
+                    console.log(v_cateArr);
+                    buildCate1(0);
+                    console.log(v_html);
+                    $("#cateListDiv").html(v_html);
+                    initCss();
+                }
+            }
+        })
+    }
+
+    function buildCate1(id) {
+        var cate1Arr = getChilds(id);
+        for (var i = 0; i < cate1Arr.length; i++) {
+            v_html += '<div class="item">';
+            v_html += '<h3><a href="">' + cate1Arr[i].categoryName + '</a></h3>';
+            v_html += '<div class="item-list clearfix">';
+            v_html += '<div class="subitem">';
+            buildCate2(cate1Arr[i].id);
+            v_html += '</div>';
+            v_html += '</div>';
+            v_html += '</div>';
+        }
+    }
+
+    function buildCate2(id) {
+        var cate2Arr = getChilds(id);
+        for (var i = 0; i < cate2Arr.length; i++) {
+            v_html += '<dl class="fore' + (i + 1) + '">';
+            v_html += '<dt><a href="">' + cate2Arr[i].categoryName + '</a></dt>';
+            v_html += '<dd>';
+            buildCate3(cate2Arr[i].id);
+            v_html += '</dd>';
+            v_html += '</dl>';
+        }
+    }
+
+    function buildCate3(id) {
+        var cate3Arr = getChilds(id);
+        for (var i = 0; i < cate3Arr.length; i++) {
+            v_html += '<em><a href="">' + cate3Arr[i].categoryName + '</a></em>';
+        }
+    }
+
+
+    function getChilds(id) {
+        var v_childs = [];
+        for (var i = 0; i < v_cateArr.length; i++) {
+            if (v_cateArr[i].fatherId == id) {
+                v_childs.push(v_cateArr[i]);
+            }
+        }
+        return v_childs;
+    }
+
+
+    //热销品牌
+    function initBrandList() {
+        $.ajax({
+            url: 'http://localhost:8086/brand/hotList',
+            beforeSend: function (xhr) {
+                var my_token = $.cookie("my_token");
+                xhr.setRequestHeader("x-auth", my_token);
+            },
+            success: function (res) {
+                if (res.code == 200) {
+                    res = res.data;
+                    var str = '';
+                    for (var i = 0; i < res.length; i++) {
+                        str += $('#brandDiv').html().replace(/##brandName##/g, res[i].brandName)
+                            .replace(/##brandImg##/g, res[i].brandImg);
+                    }
+                    $('#brandListDiv').html(str);
+                }
+            }
+        })
+    }
+
+    //商品列表
+    function initProductList() {
+        $.ajax({
+            url: 'http://localhost:8086/product/selectList',
+            type: 'post',
+            dataType: 'jsonp',//解决ajax不能跨域
+            success: function (res) {
+                var str = '';
+                for (var i = 0; i < res.length; i++) {
+                    str += $('#productDiv').html()
+                        .replace(/##productName##/g, res[i].productName)
+                        .replace(/##price##/g, res[i].price)
+                        .replace(/##mainImagePath##/g, res[i].mainImagePath)
+                        .replace(/##productId##/g, res[i].id)
+                    ;
+                }
+                $('#productListDiv').html(str);
+            }
+        })
+    }
+
+</script>
+</body>
+</html>

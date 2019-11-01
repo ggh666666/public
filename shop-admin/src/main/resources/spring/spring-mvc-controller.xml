@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="GBK"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+       xmlns:security="http://www.springframework.org/schema/security"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+        http://www.springframework.org/schema/aop   
+        http://www.springframework.org/schema/aop/spring-aop-4.0.xsd  
+        http://www.springframework.org/schema/security   
+        http://www.springframework.org/schema/security/spring-security-3.2.xsd  
+        http://www.springframework.org/schema/beans   
+        http://www.springframework.org/schema/beans/spring-beans-4.0.xsd  
+        http://www.springframework.org/schema/data/jpa   
+        http://www.springframework.org/schema/data/jpa/spring-jpa-1.3.xsd  
+        http://www.springframework.org/schema/tx   
+        http://www.springframework.org/schema/tx/spring-tx-4.0.xsd  
+        http://www.springframework.org/schema/mvc   
+    	http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd
+        http://www.springframework.org/schema/context   
+        http://www.springframework.org/schema/context/spring-context-4.0.xsd">
+
+    <!--扫描控制层-->
+    <context:component-scan base-package="com.fh.shop.admin.controller"/>
+    <!--扫描异常处理层-->
+    <context:component-scan base-package="com.fh.shop.admin.exception"/>
+
+    <!-- 开启注解驱动 -->
+    <mvc:annotation-driven/>
+
+    <!-- 支持上传文件 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver"/>
+
+    <mvc:interceptors>
+        <!-- 分布式session     cookie + redis  -->
+        <!--<mvc:interceptor>
+            <mvc:mapping path="/**"/>
+            <bean class="com.fh.shop.admin.interceptor.ReExpireInterceptor"></bean>
+        </mvc:interceptor>-->
+        <!-- 登录拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/><!-- 默认拦截所有请求 -->
+            <mvc:exclude-mapping path="/user/login.jhtml"/><!-- 不拦截登录 -->
+            <mvc:exclude-mapping path="/user/logout.jhtml"/><!-- 不拦截注销 -->
+            <mvc:exclude-mapping path="/user/getMenu.jhtml"/><!-- 不拦截查询菜单信息 -->
+            <mvc:exclude-mapping path="/user/getMenuUrls.jhtml"/><!-- 不拦截查询菜单url -->
+            <mvc:exclude-mapping path="/user/forgetPassword.jhtml"/><!-- 不拦截忘记密码 -->
+            <bean class="com.fh.shop.admin.interceptor.LoginInterceptor"></bean>
+        </mvc:interceptor>
+        <!-- 资源拦截器 -->
+        <mvc:interceptor>
+            <mvc:mapping path="/**"/><!-- 默认拦截所有请求 -->
+            <mvc:exclude-mapping path="/user/login.jhtml"/><!-- 不拦截登录 -->
+            <mvc:exclude-mapping path="/user/logout.jhtml"/><!-- 不拦截注销 -->
+            <mvc:exclude-mapping path="/user/getMenu.jhtml"/><!-- 不拦截查询菜单信息 -->
+            <mvc:exclude-mapping path="/user/getMenuUrls.jhtml"/><!-- 不拦截查询菜单url -->
+            <mvc:exclude-mapping path="/user/forgetPassword.jhtml"/><!-- 不拦截忘记密码 -->
+            <bean class="com.fh.shop.admin.interceptor.MenuInterceptor"></bean>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!--内部视图解析器-->
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/view/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!--通过spring 实例化 这个 日志切面类 交给ioc 进行管理-->
+    <bean id="loggerAcpect" class="com.fh.shop.admin.aspect.loggerAcpect"></bean>
+
+    <!--写一个切点表达式 指名 切面类 -->
+    <aop:config>
+        <aop:aspect ref="loggerAcpect">
+            <aop:pointcut id="logPointcut" expression="execution(* com.fh.shop.admin.controller..*.add*(..))
+            || execution(* com.fh.shop.admin.controller..*.del*(..))
+            || execution(* com.fh.shop.admin.controller..*.update*(..))"></aop:pointcut>
+            <aop:around method="doLog" pointcut-ref="logPointcut"></aop:around>
+        </aop:aspect>
+    </aop:config>
+</beans>
