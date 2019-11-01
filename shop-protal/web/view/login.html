@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- 上述3个meta标签*必须*放在最前面，任何其他内容都*必须*跟随其后！ -->
+    <meta name="description" content="">
+    <meta name="author" content="">
+    <link rel="icon" href="https://v3.bootcss.com/favicon.ico">
+
+    <title>登录页面</title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="/js/bootstrap-3.3.7-dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+    <link href="/js/assets/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <link href="/js/assets/signin/signin.css" rel="stylesheet">
+
+    <!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
+    <!--[if lt IE 9]>
+    <script src="/js/assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
+    <script src="/js/assets/js/ie-emulation-modes-warning.js"></script>
+
+    <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+    <script src="https://cdn.bootcss.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+    <script src="https://cdn.bootcss.com/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+</head>
+
+<body>
+<!-- script -->
+<script src="/common/script.js"></script>
+<div class="container">
+    <div>
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-tabs" role="tablist">
+            <li role="presentation" class="active"><a href="#home" aria-controls="home" role="tab" data-toggle="tab">密码登录</a>
+            </li>
+            <li role="presentation"><a href="#profile" aria-controls="profile" role="tab" data-toggle="tab">免密登录</a>
+            </li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content">
+            <div role="tabpanel" class="tab-pane fade in active" id="home">
+                <form class="form-signin">
+                    <h2 class="form-signin-heading">请登录</h2>
+                    <label for="username" class="sr-only">用户名</label>
+                    <input type="text" id="username" class="form-control" placeholder="用户名" required autofocus>
+                    <label for="password" class="sr-only">密码</label>
+                    <input type="password" id="password" class="form-control" placeholder="密码" required>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" value="remember-me"> 记住我
+                        </label>
+                        <label>
+                            <a href="/password.jsp">忘记密码</a>
+                        </label>
+                    </div>
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="login()">
+                            登录
+                        </button>
+                        <button type="reset" class="btn btn-default">
+                            重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div role="tabpanel" class="tab-pane fade" id="profile">
+                <form class="form-signin">
+                    <h2 class="form-signin-heading">手机登录</h2>
+                    <label for="mobile" class="sr-only">手机号</label>
+                    <input type="text" id="mobile" class="form-control" placeholder="手机号" required autofocus>
+                    <label for="code" class="sr-only">验证码</label>
+                    <input type="text" id="code" class="form-control" placeholder="验证码" required>
+                    <input type="button" class="btn btn-info" value="发送验证码"
+                           onclick="sendCode($('#mobile').val(), this)">
+                    <div style="text-align: center;">
+                        <button type="button" class="btn btn-primary" onclick="login(1)">
+                            登录
+                        </button>
+                        <button type="reset" class="btn btn-default">
+                            重置
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="/js/assets/js/ie10-viewport-bug-workaround.js"></script>
+
+<!-- 0.0 -->
+<!--<script src="/js/jquery-3.3.1.js"></script>
+<script src="/js/jquery.cookie.js"></script>-->
+
+
+<!-- -.- -->
+<script>
+    $(document).ready(function () {
+
+    });
+
+    //标签页
+    $('#myTabs a').click(function (e) {
+        e.preventDefault()
+        $(this).tab('show')
+    })
+    $('#myTabs a[href="#profile"]').tab('show') // Select tab by name
+    $('#myTabs a:first').tab('show') // Select first tab
+    $('#myTabs a:last').tab('show') // Select last tab
+    $('#myTabs li:eq(2) a').tab('show') // Select third tab (0-indexed)
+
+    //发送验证码
+    function sendCode(mobile, but) {
+
+        $.ajax({
+            url: 'http://localhost:8086/sms?mobile=' + mobile,
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                if (res.code == 200) {
+                    $(but).prop('disabled', true);
+                    var i = 60;
+                    var interval = setInterval(function () {
+                        $(but).val('(' + i-- + ')已发送');
+                    }, 1000);
+                    setTimeout(function () {
+                        clearInterval(interval);
+                        $(but).val('重新发送');
+                        $(but).prop('disabled', false)
+                    }, 1000 * i + 1)
+                }
+                alert(res.msg);
+            }
+        })
+    }
+
+    //登录
+    function login(flag) {
+        var param = {};
+        if (flag) {
+            var mobile = $('#mobile').val();
+            var code = $('#code').val();
+            param.mobile = mobile;
+            param.code = code;
+            param.flag = 1;
+        } else {
+            var username = $('#username').val();
+            var password = $('#password').val();
+            param.username = username;
+            param.password = password;
+        }
+
+        $.ajax({
+            url: 'http://localhost:8086/member/login',
+            type: 'post',
+            data: param,
+            dataType: 'json',
+            success: function (res) {alert()
+                if (res.code == 200) {
+                    //将信息存入cookie
+                    $.cookie("my_token", res.data, {
+                        path: '/'//path 设置cookie路径 不设置则其他页面获取不到cookie
+                        //expires:(1/48)//有效期  单位:天
+                    });
+                    location.href = '/';
+                } else {
+                    alert(res.msg);
+                }
+            }
+        });
+    }
+</script>
+</body>
+</html>

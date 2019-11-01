@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <!-- head and css -->
+    <script src="/common/head.js"></script>
+    <title>Title</title>
+</head>
+<body>
+<!-- script -->
+<script src="/common/script.js"></script>
+
+<span id="addMemberSpan">
+    <form class="form-horizontal" action="" id="addForm">
+        <div class="form-group">
+            <label for="add_username" class="col-sm-2 control-label">用户名</label>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" name="username" id="add_username" placeholder="username...">
+            </div>
+            <span id="add_username_span"></span>
+        </div>
+        <div class="form-group">
+            <label for="add_password" class="col-sm-2 control-label">密码</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" name="password" id="add_password" placeholder="password...">
+            </div>
+            <span id="add_password_span"></span>
+        </div>
+        <div class="form-group">
+            <label for="add_password" class="col-sm-2 control-label">确认密码</label>
+            <div class="col-sm-5">
+                <input type="password" class="form-control" name="password2" id="add_password2"
+                       placeholder="password2...">
+            </div>
+            <span id="add_password2_span"></span>
+        </div>
+        <div class="form-group">
+            <label for="add_realName" class="col-sm-2 control-label">真实姓名</label>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" name="realName" id="add_realName" placeholder="realName...">
+            </div>
+            <span id="add_realName_span"></span>
+        </div>
+        <div class="form-group">
+            <label for="add_mobile" class="col-sm-2 control-label">手机号</label>
+            <div class="col-sm-5">
+                <input type="text" class="form-control" name="mobile" id="add_mobile" placeholder="mobile...">
+            </div>
+            <span id="add_mobile_span"></span>
+        </div>
+        <div class="form-group">
+            <label for="add_code" class="col-sm-2 control-label">验证码</label>
+            <div class="col-sm-5">
+                    <input type="text" class="col-sm-4" name="code" id="add_code" placeholder="code...">
+                    <input type="button" class="btn btn-info" value="发送验证码"
+                           onclick="sendCode($('#add_mobile').val(), this)">
+            </div>
+            <span id="add_code_span"></span>
+        </div>
+        <div class="form-group" id="add_areaDiv">
+            <label class="col-sm-2 control-label">地区</label>
+        </div>
+        <button onclick="register()">注册</button>
+        <br>
+        <button type="reset">重置</button>
+    </form>
+
+</span>
+
+<script>
+
+    $(function () {
+        initArea('add_areaDiv', 0);
+        initValidate();
+    })
+
+    //发送验证码
+    function sendCode(mobile, but) {
+
+        $.ajax({
+            url: 'http://localhost:8086/sms?mobile=' + mobile,
+            type: 'get',
+            dataType: 'json',
+            success: function (res) {
+                if (res.code == 200) {
+                    $(but).prop('disabled', true);
+                    var i = 60;
+                    var interval = setInterval(function () {
+                        $(but).val('(' + i-- + ')已发送');
+                    }, 1000);
+                    setTimeout(function () {
+                        clearInterval(interval);
+                        $(but).val('重新发送');
+                    }, 1000 * 60)
+                    alert(res.msg);
+                }
+            }
+        })
+    }
+
+    //初始化地区
+    function initArea(elementId, areaId, obj, edit) {
+        if (obj) {
+            // 删除父级的之后的同级元素
+            $(obj).parent().nextAll().remove();
+            // 动态给下拉列表添加属性
+            $(obj).attr("data-areaName", obj.options[obj.selectedIndex].text);
+        }
+        $.ajax({
+            url: "http://localhost:8086/area",
+            type: "get",
+            data: {"id": areaId},
+            success: function (data) {
+                if (data.code == 200) {
+                    if (data.data.length == 0) {
+                        return;
+                    }
+                    // 在指定的div中追加select
+                    var v_select = '<div class="col-sm-2"><select class="form-control" name="areaSelect" onchange="initArea(\'' + elementId + '\', this.value, this, 1)"><option value="-1">==请选择==</option>';
+                    var v_areaArr = data.data;
+                    for (var i = 0; i < v_areaArr.length; i++) {
+                        v_select += "<option value='" + v_areaArr[i].id + "' data-areaName='" + v_areaArr[i].areaName + "'>" + v_areaArr[i].areaName + "</option>";
+                    }
+                    v_select += "</select></div>";
+                    $("#" + elementId).append(v_select);
+
+                }
+            }
+        })
+    }
+
+    //验证结果
+    var username_ = null;
+    var password_ = null;
+    var password2_ = null;
+    var realName_ = null;
+    var mobile_ = null;
+    var code_ = null;
+
+    function validateRes() {
+        if (username_ && password_ && password2_ && realName_ && mobile_ && code_) {
+
+            return true;
+        }
+
+        return false;
+    }
+
+    //初始化表单验证
+    function initValidate() {
+        //用户名
+        var username = $('#add_username');
+        var username_span = $('#' + username.prop('id') + '_span');
+        username.blur(function () {
+            if (!username.val()) {
+                username_span.html("用户名不能为空");
+                username_ = null;
+            }
+            else {
+                $.ajax({
+                    url: 'http://localhost:8086/member?username=' + username.val(),
+                    dataType: 'json',
+                    success: function (res) {
+                        if (res.code == 200) {
+                            username_span.html("");
+                            username_ = true;
+                        }
+                        else {
+                            username_span.html("用户名已存在");
+                            username_ = null;
+                        }
+
+                    }
+                })
+            }
+            validateRes();
+        });
+
+        //密码
+        var password = $('#add_password');
+        var password_span = $('#' + password.prop('id') + '_span');
+        var password2 = $('#add_password2');
+        var password_span2 = $('#' + password2.prop('id') + '_span');
+        password.blur(function () {
+            if (!password.val()) {
+                password_span.html("密码不能为空");
+                password_ = null;
+            }
+            else {
+                if (password.val() != password2.val()) {
+                    password_span.html("俩次密码不一致");
+                    password_ = null;
+                }
+                else {
+                    password_span.html('');
+                    password_span2.html('');
+                    password_ = true;
+                }
+            }
+        });
+        password2.blur(function () {
+            if (!password2.val()) {
+                password_span2.html("确认密码不能为空");
+                password2_ = null;
+            }
+            else {
+                if (password.val() != password2.val()) {
+                    password_span2.html("俩次密码不一致");
+                    password2_ = null;
+                }
+                else {
+                    password_span2.html('');
+                    password_span.html('');
+                    password2_ = true;
+                }
+            }
+        });
+
+        //真实姓名
+        var realName = $('#add_realName');
+        var realName_span = $('#' + realName.prop('id') + '_span');
+        realName.blur(function () {
+            if (!realName.val()) {
+                realName_span.html("真实姓名不能为空");
+                realName_ = null;
+            }
+            else {
+                realName_span.html("");
+                realName_ = true;
+            }
+        });
+
+        //手机号
+        var mobile = $('#add_mobile');
+        var mobile_span = $('#' + mobile.prop('id') + '_span');
+        mobile.blur(function () {
+            if (!mobile.val()) {
+                mobile_span.html("手机号不能为空");
+                mobile_ = null;
+            }
+            else {
+                var pattern = /^(13[0-9]|14[5|7]|15[0|1|2|3|5|6|7|8|9]|18[0|1|2|3|5|6|7|8|9])\d{8}$/;
+                if (!pattern.test(mobile.val())) {
+                    mobile_span.html("手机号格式不正确");
+                    mobile_ = null;
+                }
+                else {
+                    $.ajax({
+                        url: 'http://localhost:8086/member/' + mobile.val(),
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.code == 200) {
+                                mobile_span.html("");
+                                mobile_ = true;
+                            }
+                            else {
+                                mobile_span.html("手机号已存在");
+                                mobile_ = null;
+                            }
+
+                        }
+                    })
+                }
+
+            }
+        });
+
+        //验证码
+        var code = $('#add_code');
+        var code_span = $('#' + code.prop('id') + '_span');
+        code.blur(function () {
+            if (!code.val())
+                code_span.html("验证码不能为空");
+            else {
+                if (mobile_) {
+                    $.ajax({
+                        url: 'http://localhost:8086/sms/' + mobile.val() + '/' + code.val(),
+                        dataType: 'json',
+                        success: function (res) {
+                            if (res.code == 200) {
+                                code_span.html("");
+                                code_ = true;
+                            }
+                            else {
+                                code_span.html(res.msg);
+                                code_ = null;
+                            }
+
+                        }
+                    })
+                } else {
+
+                    code_span.html("请先输入正确的手机号");
+                }
+            }
+        });
+    }
+
+    function register() {
+        var b = false;
+
+        //obj.html("");
+        var username = $("[name=username]").val();//$("[name=username]")[1].value
+        var password = $("[name=password]").val();
+        var password2 = $("[name=password2]").val();
+        var realName = $("[name=realName]").val();
+        var mobile = $("[name=mobile]").val();
+        var code = $("[name=code]").val();
+        //
+        var v_area1 = $($("select[name='areaSelect']")[0]).val();
+        var v_area2 = $($("select[name='areaSelect']")[1]).val();
+        var v_area3 = $($("select[name='areaSelect']")[2]).val();
+        var v_area4 = $($("select[name='areaSelect']")[3]).val();
+        var v_area1Name = $($("select[name='areaSelect']")[0]).attr("data-areaname");
+        var v_area2Name = $($("select[name='areaSelect']")[1]).attr("data-areaname");
+        var v_area3Name = $($("select[name='areaSelect']")[2]).attr("data-areaname");
+        var v_area4Name = $($("select[name='areaSelect']")[3]).attr("data-areaname");
+        var v_areaInfo = v_area1Name + "-->" + v_area2Name + '-->' + v_area3Name + '-->' + v_area4Name;
+
+        var param = {
+            username: username,
+            password: password,
+            password2: password2,
+            realName: realName,
+            mobile: mobile,
+            code: code
+        };
+
+        //
+        param.area1 = v_area1;
+        param.area2 = v_area2;
+        param.area3 = v_area3;
+        param.area4 = v_area4;
+        param.areaInfo = v_areaInfo;
+
+        //obj.html(html);
+        $.ajax({
+            url: 'http://localhost:8086/member',
+            type: 'post',
+            data: param,
+            dataType: 'json',
+            async: false,
+            success: function (res) {
+                if (res.code == 200) {
+                    bootbox.alert(res.msg);
+                    b = true;
+                    location.reload();
+                }
+            },
+            error: function () {
+                alert('addMember失败');
+            }
+        });
+        console.log('Custom OK clicked');
+    }
+</script>
+</body>
+</html>
